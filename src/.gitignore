@@ -1,0 +1,5 @@
+a.out
+test_socket_tcp_serv
+test_socket_tcp_client
+test_socket_local_serv
+test_socket_local_client
