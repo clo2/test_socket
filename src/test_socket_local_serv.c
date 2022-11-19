@@ -2,11 +2,11 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
+
 #include <netinet/in.h>
 #include <netdb.h>
-
-#define TEST_IP     "127.0.0.1"
-#define TEST_PORT   (12345)
+#include "test_common.h"
 
 
 
@@ -20,11 +20,14 @@ int main(int argc, char** argv)
     struct sockaddr_in from_addr;
     char buf[2048];
 
+
+ remove(SOCKNAME);  // socket作る前に前回のファイルを消しておく。終了処理でやってもいいけど。
+
     // 受信バッファを初期化する
     memset(buf, 0, sizeof(buf));
     // ソケットを作成する
     printf("socket\n");
-    if (( fd = socket(AF_INET, SOCK_STREAM, 0 )) < 0 ) {
+    if (( fd = socket(AF_LOCAL, SOCK_STREAM, 0 )) < 0 ) {
         fprintf( stdout, "socket error : fd = %d\n", fd );
         return -1;
     }
@@ -37,14 +40,25 @@ int main(int argc, char** argv)
     }
 #endif
 
+#if 0
     // IPアドレス、ポート番号を設定
-    addr.sin_family = AF_INET;
+    addr.sin_family = AF_LOCAL;
 //    addr.sin_port = serv->s_port;
     addr.sin_port = TEST_PORT;
     addr.sin_addr.s_addr = INADDR_ANY;
+#endif
+
+  // ソケットアドレス構造体←今回はここがUNIXドメイン用のやつ
+  struct sockaddr_un sun, sun_client;
+  memset(&sun, 0, sizeof(sun));
+  memset(&sun_client, 0, sizeof(sun_client));
+  // ソケットアドレス構造体を設定
+  sun.sun_family = AF_LOCAL;               // UNIXドメイン
+  strcpy(sun.sun_path, SOCKNAME);  // UNIXドメインソケットのパスを指定
+
     // バインドする
     printf("bind\n");
-    if ( bind( fd, (struct sockaddr *)&addr, sizeof(addr)) < 0 ) {
+    if ( bind( fd, (struct sockaddr *)&sun, sizeof(sun)) < 0 ) {
         fprintf( stdout, "bind error\n" );
         return -1;
     }

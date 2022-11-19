@@ -6,8 +6,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define TEST_IP     "127.0.0.1"
-#define TEST_PORT   (12345)
+#include "test_common.h"
 
 
 int main(int argc, char** argv)

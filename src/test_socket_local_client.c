@@ -3,11 +3,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <netinet/in.h>
 #include <netdb.h>
-
-#define TEST_IP     "127.0.0.1"
-#define TEST_PORT   (12345)
+#include "test_common.h"
 
 
 int main(int argc, char** argv)
@@ -19,7 +18,7 @@ int main(int argc, char** argv)
     char buff[2048];
 
     // IPv4 TCP のソケットを作成する
-    if((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if((fd = socket(AF_LOCAL, SOCK_STREAM, 0)) < 0) {
         fprintf( stdout, "socket error\n" );
         return -1;
     }
@@ -40,14 +39,26 @@ int main(int argc, char** argv)
     }
 #endif
 
+#if 0
     // 送信先アドレスとポート番号を設定する
-    addr.sin_family = AF_INET;
+    addr.sin_family = AF_LOCAL;
 //    addr.sin_port = serv->s_port;
 //    addr.sin_addr = *(struct in_addr *)(info->h_addr_list[0]);
     addr.sin_port = TEST_PORT;
     addr.sin_addr.s_addr = inet_addr(TEST_IP);
     // サーバ接続
     connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
+#endif
+    // 通信開始のための目印の指定 
+  // ソケットアドレス構造体
+  struct sockaddr_un sun;
+  memset(&sun, 0, sizeof(sun));
+  // ソケットアドレス構造体に接続先(サーバー)を設定
+  sun.sun_family = AF_LOCAL;
+  strcpy(sun.sun_path, SOCKNAME);
+
+    connect(fd, (struct sockaddr *)&sun, sizeof(sun));
+
     sprintf( buff, "This is send Message" );
     // パケットを送信
     if ( send( fd, buff, strlen(buff), 0 ) < 0 ) {
